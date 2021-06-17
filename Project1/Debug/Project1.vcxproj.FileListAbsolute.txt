@@ -1,0 +1,2 @@
+C:\c언어\Project1\Debug\Project1.exe
+C:\c언어\Project1\Debug\Project1.pdb
