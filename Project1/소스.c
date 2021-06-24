@@ -1,14 +1,17 @@
-#include <stdio.h>
+ï»¿#include <stdio.h>
 #include <Windows.h>
 #include <conio.h>
 #include <stdlib.h>
 #include <time.h>
+#pragma comment (lib, "winmm.lib")
+#include <mmsystem.h>;
+
 
 #pragma warning(disable : 4996)
-
+void Game_Finished();
 //121 61
 
-//Åº¸· ÇÏ³ªÀÇ Á¤º¸¸¦ Ç¥ÇöÇÏ´Â ±¸Á¶Ã¼
+//íƒ„ë§‰ í•˜ë‚˜ì˜ ì •ë³´ë¥¼ í‘œí˜„í•˜ëŠ” êµ¬ì¡°ì²´
 typedef struct bullet
 {
 	int x;
@@ -16,12 +19,14 @@ typedef struct bullet
 	int direction;
 }Bullet;
 
-//±âÃ¼ÀÇ ÁÂÇ¥ Àü¿ª º¯¼ö
+//ê¸°ì²´ì˜ ì¢Œí‘œ ì „ì—­ ë³€ìˆ˜
 int X_Plain;
 int Y_Plain;
+//ë ˆë²¨
+int level;
 
-Bullet Bullet_info[50];//Åº¾à Á¤º¸ ±¸Á¶Ã¼¹è¿­
-int Bullet_Num;//ÇöÀç Á¸ÀçÇÏ´Â Åº¸·¼ö
+Bullet Bullet_info[50];//íƒ„ì•½ ì •ë³´ êµ¬ì¡°ì²´ë°°ì—´
+int Bullet_Num;//í˜„ì¬ ì¡´ì¬í•˜ëŠ” íƒ„ë§‰ìˆ˜
 
 void gotoxy(int x, int y)
 {
@@ -31,20 +36,22 @@ void gotoxy(int x, int y)
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Cur);
 }
 
-//Å°¸¦ ÀÔ·Â¹Ş°í ¿ìÁÖ¼± À§Ä¡¸¦ ¿È±â´Â ÇÔ¼ö
+//í‚¤ë¥¼ ì…ë ¥ë°›ê³  ìš°ì£¼ì„  ìœ„ì¹˜ë¥¼ ì˜´ê¸°ëŠ” í•¨ìˆ˜
 void move_Plain()
 {
 	gotoxy(X_Plain, Y_Plain);
 	printf("  ");
-	if (GetAsyncKeyState(VK_UP) & 0x8000)Y_Plain--;
-	if (GetAsyncKeyState(VK_DOWN) & 0x8000)Y_Plain++;
-	if (GetAsyncKeyState(VK_LEFT) & 0x8000)X_Plain-=2;
-	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)X_Plain+=2;
+	if ((GetAsyncKeyState(VK_UP) & 0x8000) && Y_Plain != 0)Y_Plain--;
+	if ((GetAsyncKeyState(VK_DOWN) & 0x8000) && Y_Plain != 59)Y_Plain++;
+	if ((GetAsyncKeyState(VK_LEFT) & 0x8000) && X_Plain != 0)X_Plain-=2;
+	if ((GetAsyncKeyState(VK_RIGHT) & 0x8000) && X_Plain != 118)X_Plain+=2;
+	if (X_Plain == 20 && Y_Plain == 20 && level  > 600)
+		Game_Finished();
 	gotoxy(X_Plain, Y_Plain);
-	printf("¡â");
+	printf("â–³");
 }
 
-//ºí¸´ ´ëÀÔ ÇÔ¼ö a=b
+//ë¸”ë¦¿ ëŒ€ì… í•¨ìˆ˜ a=b
 void BulletCpy(int a, int b)
 {
 	Bullet_info[a].x = Bullet_info[b].x;
@@ -52,7 +59,7 @@ void BulletCpy(int a, int b)
 	Bullet_info[a].direction = Bullet_info[b].direction;
 }
 
-//»õ·Î¿î ·£´ıÅº¸·À» ¸¸µå´Â ÇÔ¼ö
+//ìƒˆë¡œìš´ ëœë¤íƒ„ë§‰ì„ ë§Œë“œëŠ” í•¨ìˆ˜
 void CreateNewBullet(void)
 {
 	int starting_point;
@@ -83,7 +90,7 @@ void CreateNewBullet(void)
 	Bullet_Num++;
 }
 
-//Åº¸·À» Áö¿ì´Â ÇÔ¼ö 
+//íƒ„ë§‰ì„ ì§€ìš°ëŠ” í•¨ìˆ˜ 
 void ClearBullet(void)
 {
 	int i;
@@ -94,7 +101,7 @@ void ClearBullet(void)
 	}
 }
 
-//Åº¸·À» dir¿¡ ¸ÂÃç ÇÑÄ­ ¿òÁ÷ÀÌ´Â ÇÔ¼ö
+//íƒ„ë§‰ì„ dirì— ë§ì¶° í•œì¹¸ ì›€ì§ì´ëŠ” í•¨ìˆ˜
 void MoveBullet(int *px,int *py,int dir)
 {
 	switch (dir)
@@ -129,7 +136,7 @@ void MoveBullet(int *px,int *py,int dir)
 	}
 }
 
-//Æ¯Á¤ ÀÎµ¦½ºÀÇ Åº¸·À» »èÁ¦ÇÏ´Â ÇÔ¼ö
+//íŠ¹ì • ì¸ë±ìŠ¤ì˜ íƒ„ë§‰ì„ ì‚­ì œí•˜ëŠ” í•¨ìˆ˜
 void KillBullet(int n)
 {
 	int i;
@@ -142,82 +149,114 @@ void KillBullet(int n)
 	Bullet_Num--;
 }
 
-//Åº¸·À» Ãâ·ÂÇÏ´Â ÇÔ¼ö , ¸¸¾à Åº¸·ÀÌ º®µ¹À» ³ÑÀ» °æ¿ì ¼Ò¸ê ½ÃÅ°°í »õ·Î¿î Åº¸·À¸·Î ´ëÃ¼
+//íƒ„ë§‰ì„ ì¶œë ¥í•˜ëŠ” í•¨ìˆ˜ , ë§Œì•½ íƒ„ë§‰ì´ ë²½ëŒì„ ë„˜ì„ ê²½ìš° ì†Œë©¸ ì‹œí‚¤ê³  ìƒˆë¡œìš´ íƒ„ë§‰ìœ¼ë¡œ ëŒ€ì²´
 int PrintBullet(void)
 {
 	int i,NewBullet =0;
-	for (i = 0; i < Bullet_Num; i++)//°¢ Bullet¿¡ Á¢±Ù
+	for (i = 0; i < Bullet_Num; i++)//ê° Bulletì— ì ‘ê·¼
 	{
-		MoveBullet(&Bullet_info[i].x, &Bullet_info[i].y, Bullet_info[i].direction);//ºÒ¸´À» ÇÑÄ­ ¿òÁ÷ÀÓ
+		MoveBullet(&Bullet_info[i].x, &Bullet_info[i].y, Bullet_info[i].direction);//ë¶ˆë¦¿ì„ í•œì¹¸ ì›€ì§ì„
 
-		if (Bullet_info[i].x < 0 || Bullet_info[i].x>119)//ºí¸´ xÁÂÇ¥°¡ ÇÑ°è¸¦ ³ÑÀ»½Ã Áö¿ò
+		if (Bullet_info[i].x < 0 || Bullet_info[i].x>119)//ë¸”ë¦¿ xì¢Œí‘œê°€ í•œê³„ë¥¼ ë„˜ì„ì‹œ ì§€ì›€
 		{
 			KillBullet(i);
 			i--;
 			NewBullet += 1;
 		}
-		else if (Bullet_info[i].y < 0 || Bullet_info[i].y>59)//ºí¸´ yÁÂÇ¥°¡ ÇÑ°è¸¦ ³ÑÀ»½Ã Áö¿ò
+		else if (Bullet_info[i].y < 0 || Bullet_info[i].y>59)//ë¸”ë¦¿ yì¢Œí‘œê°€ í•œê³„ë¥¼ ë„˜ì„ì‹œ ì§€ì›€
 		{
 			KillBullet(i);
 			i--;
 			NewBullet += 1;
 		}
 	}
-	for (i = 0; i < NewBullet; i++)CreateNewBullet();//ºüÁø ¼ö¸¸Å­ ºí¸´ »ı¼º
+	for (i = 0; i < NewBullet; i++)CreateNewBullet();//ë¹ ì§„ ìˆ˜ë§Œí¼ ë¸”ë¦¿ ìƒì„±
 	for (i = 0; i < Bullet_Num; i++)
 	{
 		if (Bullet_info[i].x >= X_Plain -1 && Bullet_info[i].x <= X_Plain + 2)
 		{
-			// ÇÃ·¹ÀÌ¾î¿Í Ãæµ¹ °¨Áö
+			// í”Œë ˆì´ì–´ì™€ ì¶©ëŒ ê°ì§€
 			if (Bullet_info[i].y >= Y_Plain-1 && Bullet_info[i].y <= Y_Plain +1)
 			{
 				gotoxy(50, 60);
-				printf("Bullet(%d,%d), Plain(%d,%d)\n", Bullet_info[i].x, Bullet_info[i].y, X_Plain, Y_Plain);
+				//printf("Bullet(%d,%d), Plain(%d,%d)\n", Bullet_info[i].x, Bullet_info[i].y, X_Plain, Y_Plain);
 				return 1;
 			}
 		}
 		gotoxy(Bullet_info[i].x, Bullet_info[i].y);
+		if (level > 200 && level < 300 && level % 2 == 0)
+			continue;
 		printf("o");
 	}
 	return 0;
 }
 
+
+void title(void) {
+	int x = 13; //íƒ€ì´í‹€í™”ë©´ì´ í‘œì‹œë˜ëŠ” xì¢Œí‘œ 
+	int y = 5; //íƒ€ì´í‹€í™”ë©´ì´ í‘œì‹œë˜ëŠ” yì¢Œí‘œ 
+	int cnt; //íƒ€ì´í‹€ í”„ë ˆì„ì„ ì„¸ëŠ” ë³€ìˆ˜  
+	int o = 10;
+    gotoxy(x, y + 0); printf("â– â–¡â–¡â–¡â– â– â– â–¡â–¡â– â– â–¡â–¡â– â– â– â–¡â–¡â–¡â– â– â– â–¡â–¡â– â– â–¡â–¡â– â– â– â–¡â–¡â–¡â– â– â– â–¡â–¡â– â– â–¡â–¡â– â– â– "); Sleep(100);
+	gotoxy(x, y + 1); printf("â–¡                                                                                        â–¡"); Sleep(100);
+	gotoxy(x, y + 2); printf("â–¡      â– â– â– â–¤   â– â– â– â– â–¤     â– â–¤        â– â– â– â–¤   â– â– â– â– â–¤    â– â–¤          â– â–¤ â– "); Sleep(100);
+	gotoxy(x, y + 3); printf("â–     â– â–¤    â– â–¤ â– â–¤   â– â–¤   â– â– â–¤     â– â–¤    â– â–¤ â– â–¤            â– â–¤      â– â–¤   â– "); Sleep(100);
+	gotoxy(x, y + 4); printf("â–     â– â–¤         â– â–¤   â– â–¤  â– | â– â–¤   â– â–¤          â– â–¤              â– â–¤  â– â–¤     â–¡"); Sleep(100);
+	gotoxy(x, y + 5); printf("â–¡      â– â– â– â–¤   â– â– â– â– â–¤  â– â– â– â– â–¤  â– â–¤          â– â– â– â– â–¤          â– â– â–¤       â– "); Sleep(100);
+	gotoxy(x, y + 6); printf("â–             â– â–¤ â– â–¤       â– â–¤    â– â–¤ â– â–¤          â– â–¤              â– â–¤ â– â–¤      â–¡"); Sleep(100);
+	gotoxy(x, y + 7); printf("â–¡    â– â–¤    â– â–¤ â– â–¤      â– â–¤      â– â–¤ â– â–¤    â– â–¤ â– â–¤            â– â–¤      â– â–¤   â– "); Sleep(100);
+	gotoxy(x, y + 8); printf("â–       â– â– â– â–¤   â– â–¤     â– â–¤        â– â–¤  â– â– â– â–¤   â– â– â– â– â–¤    â– â–¤          â– â–¤ â– "); Sleep(100);
+	gotoxy(x, y + 9); printf("â–¡                                                                                        â–¡"); Sleep(100);
+	gotoxy(x, y + 10);printf("â–                  +   +   +  < Please Enter Any Key to Start.. >   +  +  +               â– "); Sleep(100);
+	gotoxy(x, y + 11);printf("â– â–¡â–¡â– â– â– â– â–¡â–¡â– â– â– â–¡â–¡â– â– â–¡â–¡â– â– â–¡â–¡â– â– â– â–¡â–¡â–¡â– â– â– â–¡â–¡â– â– â–¡â–¡â– â–¡â–¡â– â–¡â–¡â– â– â– ");Sleep(100);
+	
+	gotoxy(x, y + 13); printf("  â–³   : Shift");
+	gotoxy(x, y + 14); printf("â—  â–· : Left / Right");
+	gotoxy(x, y + 15); printf("  â–½   : Soft Drop");
+	//gotoxy(x, y + 15); printf(" Space : Pause");
+	for (cnt = 0;; cnt++) { //cntë¥¼ 1ì”© ì¦ê°€ì‹œí‚¤ë©´ì„œ ê³„ì† ë°˜ë³µ    //í•˜ë‚˜ë„ ì•ˆì¤‘ìš”í•œ ë³„ ë°˜ì§ì´ëŠ” ì• ë‹ˆë©”ì´ì…˜íš¨ê³¼ 
+		if (kbhit())
+		{
+			 //í‚¤ì…ë ¥ì´ ìˆìœ¼ë©´ ë¬´í•œë£¨í”„ ì¢…ë£Œ 
+			gotoxy(x, y + 10); printf("â–                       +   +   +  < wait for 3 second >   +  +  +                        â– ");
+			gotoxy(x, y + 11); printf("â– â–¡â–¡â– â– â– â– â–¡â–¡â– â– â– â–¡â–¡â– â– â–¡â–¡â– â– â–¡â–¡â– â– â– â–¡â–¡â–¡â– â– â– â–¡â–¡â– â– â–¡â–¡â– â–¡â–¡â– â–¡â–¡â– â– â– "); Sleep(1000);
+			gotoxy(x, y + 10); printf("â–                           +   +  < wait for 2 second >   +  +                           â– ");
+			gotoxy(x, y + 11); printf("â– â–¡â–¡â– â– â– â– â–¡â–¡â– â– â– â–¡â–¡â– â– â–¡â–¡â– â– â–¡â–¡â– â– â– â–¡â–¡â–¡â– â– â– â–¡â–¡â– â– â–¡â–¡â– â–¡â–¡â– â–¡â–¡â– â– â– "); Sleep(1000);
+			gotoxy(x, y + 10); printf("â–                               +  < wait for 1 second >   +                              â– ");
+			gotoxy(x, y + 11); printf("â– â–¡â–¡â– â– â– â– â–¡â–¡â– â– â– â–¡â–¡â– â– â–¡â–¡â– â– â–¡â–¡â– â– â– â–¡â–¡â–¡â– â– â– â–¡â–¡â– â– â–¡â–¡â– â–¡â–¡â– â–¡â–¡â– â– â– "); Sleep(1000);
+			break;
+		}Sleep(10); // 00.1ì´ˆ ë”œë ˆì´  
+	}
+
+
+
+	while (_kbhit()) _getch(); //ë²„í¼ì— ê¸°ë¡ëœ í‚¤ê°’ì„ ë²„ë¦¼ 
+
+}
 int main()
 {
+	system("mode con cols=120 lines=60");
+	title();
+	//PlaySound(TEXT("bgm.wav"), NULL, SND_ASYNC | SND_LOOP);//ìŒì•… ì¬ìƒ
+	int i;
 
-	//system("mode con sole = 121 line = 61");
-	int i,level=0;
-	int x = 13, y = 5;
 	int a = 50,b=150;
-	gotoxy(x, y + 0); printf("____________________________________________________________________________________________");
-	gotoxy(x, y + 1); printf("¢Ç                                                                                        ¢Ç");
-	gotoxy(x, y + 2); printf("¢Ç      ¢Ç¢Ç¢Ç    ¢Ç¢Ç¢Ç¢Ç       ¢Ç          ¢Ç¢Ç¢Ç    ¢Ç¢Ç¢Ç¢Ç¢Ç      ¢Ç          ¢Ç     ¢Ç");
-	gotoxy(x, y + 3); printf("¢Ç    ¢Ç      ¢Ç  ¢Ç      ¢Ç    ¢Ç¢Ç       ¢Ç      ¢Ç  ¢Ç                ¢Ç      ¢Ç       ¢Ç");
-	gotoxy(x, y + 4); printf("¢Ç    ¢Ç          ¢Ç      ¢Ç   ¢Ç  ¢Ç     ¢Ç           ¢Ç                  ¢Ç  ¢Ç         ¢Ç");
-	gotoxy(x, y + 5); printf("¢Ç      ¢Ç¢Ç¢Ç    ¢Ç¢Ç¢Ç¢Ç    ¢Ç¢Ç¢Ç¢Ç    ¢Ç           ¢Ç¢Ç¢Ç¢Ç¢Ç            ¢Ç           ¢Ç");
-	gotoxy(x, y + 6); printf("¢Ç            ¢Ç  ¢Ç         ¢Ç      ¢Ç   ¢Ç           ¢Ç                  ¢Ç  ¢Ç         ¢Ç");
-	gotoxy(x, y + 7); printf("¢Ç    ¢Ç      ¢Ç  ¢Ç        ¢Ç        ¢Ç   ¢Ç      ¢Ç  ¢Ç                ¢Ç      ¢Ç       ¢Ç");
-	gotoxy(x, y + 8); printf("¢Ç      ¢Ç¢Ç¢Ç    ¢Ç       ¢Ç          ¢Ç    ¢Ç¢Ç¢Ç    ¢Ç¢Ç¢Ç¢Ç¢Ç      ¢Ç          ¢Ç     ¢Ç");
-	gotoxy(x, y + 9); printf("¢Ç                                                                                        ¢Ç");
-	gotoxy(x, y + 10);printf("¢Ç                      +   +   +  < wait for 3 second >   +  +  +                        ¢Ç");
-	gotoxy(x, y + 11);printf("¢Ç________________________________________________________________________________________¢Ç");Sleep(1000);
-	gotoxy(x, y + 10);printf("¢Ç                          +   +  < wait for 2 second >   +  +                           ¢Ç");
-	gotoxy(x, y + 11);printf("¢Ç________________________________________________________________________________________¢Ç");Sleep(1000);
-	gotoxy(x, y + 10);printf("¢Ç                              +  < wait for 1 second >   +                              ¢Ç");
-	gotoxy(x, y + 11);printf("¢Ç________________________________________________________________________________________¢Ç");
-	Sleep(1000);
 	
-	
+	//if (_getch('p'))ì¼ì‹œì •ì§€
+	//{
+	//	system("pause");
+	//    system("cls"); //í™”ë©´ ì§€ìš°ê³  ìƒˆë¡œ ê·¸ë¦¼ 
+	//}
 	
 	system("cls");
-	//Ä¿¼­ ¼û±â±â
+	//ì»¤ì„œ ìˆ¨ê¸°ê¸°
 	CONSOLE_CURSOR_INFO cursorinfo = { 0, };
 	cursorinfo.dwSize = 1;
 	cursorinfo.bVisible = FALSE;
 	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursorinfo);
 
-	//³­¼ö»ç¿ëÀ» À§ÇÑ ºÎºĞ
-	srand(time(NULL));
+	//ë‚œìˆ˜ì‚¬ìš©ì„ ìœ„í•œ ë¶€ë¶„
+	srand((unsigned int)time(NULL));
 
 	X_Plain = 60;
 	Y_Plain = 30;
@@ -231,36 +270,63 @@ int main()
 	{
 		ClearBullet();
 		move_Plain();
-		if (PrintBullet())//°ÔÀÓ¿À¹ö »óÈ²ÀÏ°æ¿ì Á¶°Ç¹® ÁøÀÔ
+		if (PrintBullet())//ê²Œì„ì˜¤ë²„ ìƒí™©ì¼ê²½ìš° ì¡°ê±´ë¬¸ ì§„ì…
 		{
+			system("cls");
 			int x =45, y =20 ;
-			gotoxy(x, y+ 0);  printf("__________________________________"); //°ÔÀÓ¿À¹ö ¸Ş¼¼Áö 
-			gotoxy(x, y + 1); printf("¢Ç                              ¢Ç");
-			gotoxy(x, y + 2); printf("¢Ç  +-----------------------+   ¢Ç");
-			gotoxy(x, y + 3); printf("¢Ç  |  G A M E  O V E R..   |   ¢Ç");
-			gotoxy(x, y + 4); printf("¢Ç  +-----------------------+   ¢Ç");
-			gotoxy(x, y + 5); printf("¢Ç   YOUR SCORE: %6d         ¢Ç", level);
-			gotoxy(x, y + 6); printf("¢Ç                              ¢Ç");
-			gotoxy(x, y + 7); printf("¢Ç                              ¢Ç");
-			gotoxy(x, y + 8); printf("¢Ç                              ¢Ç");
-			gotoxy(x, y + 9); printf("¢Ç______________________________¢Ç");
-			Sleep(6000);
+			gotoxy(x, y+ 0);  printf("â– â–¡â–¡â– â– â–¡â–¡â– â–¡â–¡â– â– â– â– â–¡â–¡â– "); //ê²Œì„ì˜¤ë²„ ë©”ì„¸ì§€ 
+			gotoxy(x, y + 1); printf("â–                               â–¡");
+			gotoxy(x, y + 2); printf("â–¡   +-----------------------+  â–¡");
+			gotoxy(x, y + 3); printf("â–    |  G A M E  O V E R..   |  â– ");
+			gotoxy(x, y + 4); printf("â–¡   +-----------------------+  â–¡");
+			gotoxy(x, y + 5); printf("â–¡     YOUR SCORE: %6d       â– ", level);
+			gotoxy(x, y + 6); printf("â–                               â–¡");
+			gotoxy(x, y + 7); printf("â–                               â–¡");
+			gotoxy(x, y + 8); printf("â–¡                              â– ");
+			gotoxy(x, y + 9); printf("â– â–¡â–¡â– â– â– â– â–¡â–¡â– â– â– â– â–¡â–¡â– â– \n");
+			Sleep(1000);
+			level = 0;
+			system("pause");
+			Bullet_Num = 0;
+			return main();
 			
-			return 0;
+			
 		}
 		level++;
 		gotoxy(53, 0);
 		printf("point : %d ",level);
 		if (level % 20 == 0 && level < 800)CreateNewBullet();
-		if (level  == b)
+
+		if (level  == b)//ì†ë„ ì¡°ì ˆ
 		{
 			a -= 7;
 			b += 150;
 		}
 		
 		Sleep(a);
+		if (level == 600)
+		{
+			
+			gotoxy(20, 20);printf("â†“");
+			
+		}
 		
 	}
-	return 0;
+	//return main();
 }
 
+void Game_Finished()
+{
+	int x = 13, y = 5;
+	system("cls");
+	gotoxy(x, y + 1); printf("                                                                        ");
+	gotoxy(x, y + 2); printf("            Thank you for play the Space X                              ");
+	gotoxy(x, y + 3); printf("                                                                        ");
+	gotoxy(x, y + 4); printf("              (â˜Âºãƒ®Âº)â˜  Team Member:JinHyung && SungHyun  â˜œ(Âºãƒ®Âºâ˜œ)  ");
+	gotoxy(x, y + 5); printf("                                                                        ");
+	gotoxy(x, y + 6); printf("   (ã¤ 0_0)ã¤                                           o==(>â–½<*)o     ");
+	gotoxy(x, y + 7); printf("                                                                        ");
+	gotoxy(x, y + 8); printf("                                                                        ");
+	gotoxy(x, y + 9); printf("                                                                        ");
+	system("pause");
+}
